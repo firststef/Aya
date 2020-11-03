@@ -3,6 +3,7 @@ import json
 from typing import List
 import numpy as np
 import re
+from itertools import combinations
 
 EMP = ' '
 
@@ -29,9 +30,10 @@ def is_valid_move(board, player, move, throw=True):
         if board[move[1][0]][move[1][1]] != EMP:
             raise InvalidMove("That space is not empty")
         if abs(move[0][0] - move[1][0]) not in [0, 1] or \
-                abs(move[0][1] - move[1][1]) not in [0, 1] and \
-                (abs(move[0][0] - move[1][0]) + abs(move[0][1] - move[1][1])) != 1:
-            raise InvalidMove("Move is only allowed sideways")
+                abs(move[0][1] - move[1][1]) not in [0, 1]:
+            raise InvalidMove("Move is only allowed 1 space")
+        if move[0][0] == move[1][0] and move[0][1] == move[1][1]:
+            raise InvalidMove("Same move not allowed")
     except InvalidMove as e:
         if throw:
             raise e
@@ -45,7 +47,7 @@ def get_all_moves_from(matrix, player):
     for i in range(4):
         for j in range(4):
             if matrix[i][j] == player:
-                all_moves += [[[i, j], [i + add[0], j + add[1]]] for add in [[0, 1], [1, 0], [-1, 0], [0, -1]]
+                all_moves += [[[i, j], [i + add[0], j + add[1]]] for add in combinations([0, 1, -1], 2)
                               if is_valid_move(matrix, player, [[i, j], [i + add[0], j + add[1]]], False)]
     return all_moves
 
