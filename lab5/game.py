@@ -56,6 +56,10 @@ class InvalidMove(Exception):
     pass
 
 
+class GoBackMove(Exception):
+    pass
+
+
 def apply_change(board, player, move):
     new_board = json.loads(json.dumps(board))
     is_valid_move(board, player, move)
@@ -70,10 +74,12 @@ class Game:
         self.turn = 0
         self.player1_type = player1_type
         self.player2_type = player2_type
+        self.move_stack = []
 
     def init(self):
         self.matrix = get_default_board()
         self.turn = 0
+        self.move_stack.append(json.loads(json.dumps(self.matrix)))
 
     def start(self):
         self.init()
@@ -82,8 +88,16 @@ class Game:
             try:
                 choice = self.handle_player_input()
                 new_st = apply_change(self.matrix, 'O' if self.turn == 0 else 'C', choice)
+                self.move_stack.append(json.loads(json.dumps(self.matrix)))
             except InvalidMove as e:
                 print(e)
+                continue
+            except GoBackMove:
+                if len(self.move_stack) >= 2:
+                    self.matrix = self.move_stack.pop()
+                    self.matrix = self.move_stack.pop()
+                    print('Reverted')
+                    print(np.matrix(np.flip(np.fliplr(self.matrix))))
                 continue
             self.matrix = new_st
             self.turn = 1 if self.turn == 0 else 0
@@ -102,15 +116,21 @@ class Game:
         lst = None
         while True:
             try:
+                input_t = input("Enter move player" + ("1" if self.turn == 0 else "2"))
+                if input_t == "back":
+                    raise GoBackMove
                 lst = eval('[' + ','.join(
-                    re.findall(r'[0-9]', input("Enter move player" + ("1" if self.turn == 0 else "2")))) + ']')
-            finally:
-                if not isinstance(lst, list) or not len(lst[0:4]) == 4:
-                    print('Invalid move. Move format: 0 0 0 1. => [0, 0] to [0, 1]')
-                    continue
-                mv = [[lst[0], lst[1]], [lst[2], lst[3]]]
-                print('moving ' + str(mv[0]) + ' to ' + str(mv[1]))
-                return mv
+                    re.findall(r'[0-9]', input_t)) + ']')
+            except GoBackMove as g:
+                raise g
+            except InvalidMove:
+                pass
+            if not isinstance(lst, list) or not len(lst[0:4]) == 4:
+                print('Invalid move. Move format: 0 0 0 1. => [0, 0] to [0, 1]')
+                continue
+            mv = [[lst[0], lst[1]], [lst[2], lst[3]]]
+            print('moving ' + str(mv[0]) + ' to ' + str(mv[1]))
+            return mv
 
     def handle_ai_input(self):
         lst = get_all_moves_from(self.matrix, 'C')
