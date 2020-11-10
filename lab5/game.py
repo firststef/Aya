@@ -67,6 +67,8 @@ class Game:
                 raise g
             except InvalidMove:
                 pass
+            except EOFError:
+                continue
             if not isinstance(lst, list) or not len(lst[0:4]) == 4:
                 print('Invalid move. Move format: 0 0 0 1. => [0, 0] to [0, 1]')
                 continue

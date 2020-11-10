@@ -122,7 +122,7 @@ class TestLab5(unittest.TestCase):
             if node == 'K':
                 return 0
             if node == 'L':
-                return 7
+                raise Exception
             if node == 'J':
                 return 2
             if node == 'M':
